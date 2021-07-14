@@ -1,0 +1,26 @@
+{
+  "name": "slack",
+  "version": "0.1.0",
+  "description": "slack bot",
+  "main": "app.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shubhamAltran/slack.git"
+  },
+  "keywords": [
+    "slackbot"
+  ],
+  "author": "shubham",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shubhamAltran/slack/issues"
+  },
+  "homepage": "https://github.com/shubhamAltran/slack#readme",
+  "dependencies": {
+    "@slack/events-api": "^3.0.1",
+    "@slack/web-api": "^6.2.4"
+  }
+}
