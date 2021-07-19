@@ -1,14 +1,14 @@
 // const { WebClient } = require('@slack/web-api');
 // const { createEventAdapter } = require('@slack/events-api');
 
-// const slackSigningSecret = '33590680a6ca752f4115bcad66927cf5';
-// const slackToken = 'xoxb-2254841740720-2265463604710-tEPS1R0c5o3ojAsHlDTn1KDB';
+// const slackSigningSecret = '';
+// const slackToken = '';
 // const port = 3000;
 
 // const slackEvents = createEventAdapter(slackSigningSecret);
 // const slackClient = new WebClient(slackToken);
 
-// const conversationId = 'D027KECMKB9';
+// const conversationId = '';
 
 // // (async () => {
 
@@ -59,17 +59,21 @@
 const { App } = require('@slack/bolt');
 
 const app = new App({
-  signingSecret: 'add your key',
-  token: 'add your token',
+  signingSecret: 'enter secret key',
+  token: 'enter token',
 });
+
+/* Add functionality here */
 app.event('message', async ({ event, client }) => {
-  //add yor channel id in below line
-  if(event.channel === 'D027KECMKB9'){
+  // Do some slack-specific stuff here
+  //enter your channel id
+  if(event.channel === ''){
   console.log(event.channel)
   await client.chat.postMessage({ channel: event.channel, text: `Hello <@${event.user}>! :tada:` });
 }
 });
 app.event('app_mention', async ({ event, client }) => {
+  // Do some slack-specific stuff here
   console.log(event.channel)
   await client.chat.postMessage({ channel: event.channel, text: `Hello <@${event.user}>! :tada:` });
 });
