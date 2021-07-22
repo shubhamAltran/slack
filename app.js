@@ -2,7 +2,9 @@ const { App } = require('@slack/bolt');
 const dialogflow = require('@google-cloud/dialogflow');
 const uuid = require('uuid');
 const constants = require('./constants');
-let StoreObj = {};
+const StoreObj = require('./storage.json');
+const fs = require('fs')
+//let StoreObj = {};
 
 const app = new App({
   signingSecret: constants.signingSecret,
@@ -11,19 +13,27 @@ const app = new App({
   stateSecret: constants.stateSecret,
   scopes: ['app_mentions:read', 'calls:read', 'calls:write', 'channels:history', 'channels:read', 'chat:write', 'groups:history', 'im:history', 'im:read', 'im:write', 'incoming-webhook', 'mpim:history', 'mpim:read', 'team:read'],
 
-  
+
   installationStore: {
     storeInstallation: async (installation) => {
       // change the line below so it saves to your database
       if (installation.isEnterpriseInstall && installation.enterprise !== undefined) {
         // support for org wide app installation
+        console.log(`this is store : ${StoreObj} `)
         StoreObj[installation.enterprise.id] = installation;
-        return StoreObj;
+        // Make whatever changes you want to the parsed data
+        return await fs.writeFileSync('./storage.json', JSON.stringify(StoreObj));
+        //StoreObj[installation.enterprise.id] = installation;
+        //return StoreObj;
       }
       if (installation.team !== undefined) {
         // single team app installation
+        console.log(`this is store : ${JSON.stringify(StoreObj)} `)
         StoreObj[installation.team.id] = installation;
-        return StoreObj;
+        // Make whatever changes you want to the parsed data
+        return await fs.writeFileSync('./storage.json', JSON.stringify(StoreObj));
+        // StoreObj[installation.team.id] = installation;
+        // return StoreObj;
       }
       throw new Error('Failed saving installation data to installationStore');
     },
@@ -31,11 +41,14 @@ const app = new App({
       // change the line below so it fetches from your database
       if (installQuery.isEnterpriseInstall && installQuery.enterpriseId !== undefined) {
         // org wide app installation lookup
+        console.log("hiiiiiiiiiiiiiiiiiii")
+        console.log(StoreObj[installQuery.enterpriseId])
         return StoreObj[installQuery.enterpriseId];
       }
       if (installQuery.teamId !== undefined) {
         // single team app installation lookup
-
+        console.log("hellloooooooooo")
+        console.log(StoreObj[installQuery.teamId])
         return StoreObj[installQuery.teamId];
       }
 
@@ -46,13 +59,21 @@ const app = new App({
       // change the line below so it deletes from your database
       if (installQuery.isEnterpriseInstall && installQuery.enterpriseId !== undefined) {
         // org wide app installation deletion
+        console.log(`this is store : ${StoreObj} `)
         delete StoreObj[installQuery.enterpriseId];
-        return StoreObj;
+        // Make whatever changes you want to the parsed data
+        return await fs.writeFileSync('./storage.json', JSON.stringify(StoreObj));
+        // delete StoreObj[installQuery.enterpriseId];
+        // return StoreObj;
       }
       if (installQuery.teamId !== undefined) {
         // single team app installation deletion
+        console.log(`this is store : ${StoreObj} `)
         delete StoreObj[installQuery.teamId];
-        return StoreObj;
+        // Make whatever changes you want to the parsed data
+        return await fs.writeFileSync('./storage.json', JSON.stringify(StoreObj));
+        // delete StoreObj[installQuery.teamId];
+        // return StoreObj;
       }
       throw new Error('Failed to delete installation');
     },
