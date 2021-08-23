@@ -4,7 +4,8 @@
   "description": "slack bot",
   "main": "app.js",
   "scripts": {
-    "test": "npm test"
+    "test": "npm test",
+    "start": "ts-node app.ts"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,11 @@
     "@slack/bolt": "^3.5.0",
     "@slack/events-api": "^3.0.1",
     "@slack/web-api": "^6.2.4",
-    "fs": "0.0.1-security"
+    "fs": "0.0.1-security",
+    "node-cache": "^5.1.2"
+  },
+  "devDependencies": {
+    "ts-node": "^10.2.0",
+    "typescript": "^4.3.5"
   }
 }

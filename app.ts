@@ -1,10 +1,22 @@
-const { App } = require('@slack/bolt');
-const dialogflow = require('@google-cloud/dialogflow');
-const uuid = require('uuid');
-const constants = require('./constants');
-const StoreObj = require('./storage.json');
-const fs = require('fs')
-//let StoreObj = {};
+
+import { App , ExpressReceiver,GenericMessageEvent} from '@slack/bolt'
+import constants                from './constants'
+import StoreObj                 from './storage.json'
+//import db                       from './db.json'
+import fs                       from 'fs'
+import NodeCache                from 'node-cache' 
+import  uuid                    from 'uuid';
+import dialogflow from '@google-cloud/dialogflow';
+
+const receiver = new ExpressReceiver({ signingSecret: constants.signingSecret,
+  clientId: constants.clientId,
+  clientSecret: constants.clientSecret,
+  stateSecret: constants.stateSecret})
+
+  receiver.router.get('/secret-page', (req, res) => {
+  // You're working with an express req and res now.
+  res.send('yay!');
+});
 
 const app = new App({
   signingSecret: constants.signingSecret,
@@ -19,7 +31,6 @@ const app = new App({
       // change the line below so it saves to your database
       if (installation.isEnterpriseInstall && installation.enterprise !== undefined) {
         // support for org wide app installation
-        console.log(`this is store : ${StoreObj} `)
         StoreObj[installation.enterprise.id] = installation;
         // Make whatever changes you want to the parsed data
         return await fs.writeFileSync('./storage.json', JSON.stringify(StoreObj));
@@ -28,7 +39,6 @@ const app = new App({
       }
       if (installation.team !== undefined) {
         // single team app installation
-        console.log(`this is store : ${JSON.stringify(StoreObj)} `)
         StoreObj[installation.team.id] = installation;
         // Make whatever changes you want to the parsed data
         return await fs.writeFileSync('./storage.json', JSON.stringify(StoreObj));
@@ -41,14 +51,10 @@ const app = new App({
       // change the line below so it fetches from your database
       if (installQuery.isEnterpriseInstall && installQuery.enterpriseId !== undefined) {
         // org wide app installation lookup
-        console.log("hiiiiiiiiiiiiiiiiiii")
-        console.log(StoreObj[installQuery.enterpriseId])
         return StoreObj[installQuery.enterpriseId];
       }
       if (installQuery.teamId !== undefined) {
         // single team app installation lookup
-        console.log("hellloooooooooo")
-        console.log(StoreObj[installQuery.teamId])
         return StoreObj[installQuery.teamId];
       }
 
@@ -59,7 +65,6 @@ const app = new App({
       // change the line below so it deletes from your database
       if (installQuery.isEnterpriseInstall && installQuery.enterpriseId !== undefined) {
         // org wide app installation deletion
-        console.log(`this is store : ${StoreObj} `)
         delete StoreObj[installQuery.enterpriseId];
         // Make whatever changes you want to the parsed data
         return await fs.writeFileSync('./storage.json', JSON.stringify(StoreObj));
@@ -68,7 +73,6 @@ const app = new App({
       }
       if (installQuery.teamId !== undefined) {
         // single team app installation deletion
-        console.log(`this is store : ${StoreObj} `)
         delete StoreObj[installQuery.teamId];
         // Make whatever changes you want to the parsed data
         return await fs.writeFileSync('./storage.json', JSON.stringify(StoreObj));
@@ -115,15 +119,12 @@ async function connectDialogflow(projectId, userText) {
 
   console.log(`  Query: ${result.queryText}`);
   console.log(`  Response: ${result.fulfillmentText}`);
-  console.log(!result.fulfillmentText);
   if (!result.fulfillmentText) {
     console.log(`  Intent: ${result.intent.displayName}`);
     // if(result.intent.displayName!=='Default Welcome Intent'){
     try{
     const handler = require(`./intentHandlers/${result.intent.displayName}.ts`);
-    console.log('here');
     const dataRes = await handler(result.fulfillmentText);
-    // console.log('============='+JSON.stringify(dataRes));
     resArr.push(result.fulfillmentText);
     resArr.push(JSON.stringify(dataRes));
     dialogflowRes = resArr[1]
@@ -131,12 +132,6 @@ async function connectDialogflow(projectId, userText) {
     catch(err){
       console.log(err);
     }
-  //}
-  // else{
-  //   console.log('ggggg');
-  //   console.log(resArr);
-  //   dialogflowRes = result.fulfillmentText;
-  // }
   } else {
     console.log(`  No intent matched.`);
     return result.fulfillmentText;
@@ -144,34 +139,32 @@ async function connectDialogflow(projectId, userText) {
 console.log('______________'+dialogflowRes)
   return dialogflowRes;
 }
-app.event('message', async ({ event, client }) => {
-  if (event.channel_type === 'im') {
-    console.log(event)
-    console.log(`Got message from user ${event.user}: ${event.text}`);
-    let data = await connectDialogflow('chatbot-agent-uygg', event.text);
-    console.log(data);
-    console.log(data.indexOf('mrkdwn'));
-    console.log("Run sampleeeeeeeeeeeee end")
+app.message(/.*/, async ({ message,body, client}) => {
+  if (message.channel_type === 'im') {
+    let data = await connectDialogflow('chatbot-agent-uygg', (message as GenericMessageEvent).text);
     if(data.indexOf('mrkdwn')==35){
-    await client.chat.postMessage({ channel: event.channel, text: data,blocks:data});
+    await client.chat.postMessage({ channel: message.channel, text: data,blocks:data});
     }
     else{
-      console.log('fff');
-    await client.chat.postMessage({ channel: event.channel, text: data});
+    await client.chat.postMessage({ channel: message.channel, text: data});
     }
   }
 });
 
-app.event('app_mention', async ({ event, client }) => {
-  console.log(event.channel)
-  await client.chat.postMessage({ channel: event.channel, text: `Hello <@${event.user}>! :tada:` });
-});
-
-app.event('error', console.error);
 
 (async () => {
   // Start the app
   await app.start(constants.port);
+  await receiver.start(3001);
 
   console.log('⚡️ Bolt app is running! on 3000');
 })();
+
+
+
+
+
+
+
+
+
